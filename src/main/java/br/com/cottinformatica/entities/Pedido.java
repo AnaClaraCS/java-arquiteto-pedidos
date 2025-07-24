@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.UUID;
 
-import br.com.cotiinformatica.enums.*;
+import br.com.cottinformatica.enums.StatusPedido;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
