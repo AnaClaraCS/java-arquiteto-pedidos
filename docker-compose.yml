@@ -1,13 +1,25 @@
 services:
+  pedidosapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    networks:
+      - pedidos-network
+    depends_on:
+      - postgres
+      - rabbitmq
+
   postgres:
     image: postgres:16
     container_name: pedidos-db
     environment:
       POSTGRES_DB: pedidos_db
-      POSTGRES_USER: pedidos_user
-      POSTGRES_PASSWORD: pedidos_pass
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: senha
     ports:
-      - "5435:5432"
+      - "5432:5432"
     volumes:
       - pedidos_postgres_data:/var/lib/postgresql/data
     networks:
@@ -20,7 +32,7 @@ services:
       - "5672:5672"
       - "15672:15672"
     networks:
-     - pedidos-network
+      - pedidos-network
 
 volumes:
   pedidos_postgres_data:

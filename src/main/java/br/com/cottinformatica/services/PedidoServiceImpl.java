@@ -1,5 +1,6 @@
 package br.com.cottinformatica.services;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -15,7 +16,9 @@ import br.com.cottinformatica.dtos.PedidoRequest;
 import br.com.cottinformatica.dtos.PedidoResponse;
 import br.com.cottinformatica.entities.Pedido;
 import br.com.cottinformatica.enums.StatusPedido;
+import br.com.cottinformatica.events.PedidoCriado;
 import br.com.cottinformatica.interfaces.PedidoService;
+import br.com.cottinformatica.components.RabbitMQProducer;
 
 import br.com.cottinformatica.repositories.PedidoRepository;
 
@@ -23,6 +26,7 @@ import br.com.cottinformatica.repositories.PedidoRepository;
 public class PedidoServiceImpl implements PedidoService {
     
     @Autowired PedidoRepository pedidoRepository;
+    @Autowired RabbitMQProducer rabbitMQProducer;
 
     @Override
     public PedidoResponse criar(PedidoRequest request) {
@@ -31,6 +35,12 @@ public class PedidoServiceImpl implements PedidoService {
         pedido.setDataPedido(new Date());
         pedido.setStatus(StatusPedido.PENDENTE);
         pedidoRepository.save(pedido);
+
+        // Adioiona pedido na lista
+        var pedidoCriado = mapper.map(pedido, PedidoCriado.class);
+        pedidoCriado.setDataHoraCriacao(LocalDateTime.now());
+        rabbitMQProducer.send(pedidoCriado);
+
         return mapper.map(pedido, PedidoResponse.class);
     }
     
