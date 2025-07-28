@@ -12,9 +12,9 @@ public class SwaggerConfiguration {
 	OpenAPI customOpenAPI() {
 		return new OpenAPI()
 			.info(new Info()
-			.title("Pedidos API - Treinamento Java Avançado: Formação Arquiteto")
+			.title("Pedidos API")
 			.version("v1")
-			.description("Documentação da API do projeto")
+			.description("Documentação da API do projeto - Treinamento Java Avançado: Formação Arquiteto")
 			.contact(new Contact()
 			.name("COTI Informática")
 			.email("contato@cotiinformatica.com.br")));
