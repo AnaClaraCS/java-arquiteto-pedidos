@@ -1,38 +1,53 @@
 package br.com.cottinformatica.components;
 
+import java.time.LocalDateTime;
+
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import br.com.cottinformatica.entities.OutboxMessage;
 import br.com.cottinformatica.events.PedidoCriado;
+import br.com.cottinformatica.repositories.OutboxMessageRepository;
 
 @Component
 public class RabbitMQConsumer {
     @Autowired ObjectMapper objectMapper;
+    @Autowired OutboxMessageRepository outboxMessageRepository;
+
     /*
     * Método para ler a fila constantemente
     */
 
     @RabbitListener(queues = "pedidos")
     public void receive(@Payload String payload) {
+        var outboxMessage = new OutboxMessage();
+        outboxMessage.setDataHoraCriacao(LocalDateTime.now());
+        outboxMessage.setMensagem(payload);
         try {
             //deserializar os dados lidos da API (json)
-            var pedidoCriado = objectMapper.readValue
-            (payload, PedidoCriado.class);
+            var pedidoCriado = objectMapper.readValue(payload, PedidoCriado.class);
             //enviando para a API de faturamento
             var restTemplate = new RestTemplate();
-            var url = 
-            "http://localhost:8082/api/v1/faturamentos";
-            var response = restTemplate.postForObject
+            var url = "http://faturamentosapi:8082/api/v1/faturamentos";
+            var response = restTemplate.postForEntity
             (url, pedidoCriado, String.class);
-            System.out.println(response);
+            outboxMessage.setTransmitido
+            (response.getStatusCode().is2xxSuccessful());
         }
         catch(Exception e) {
+            outboxMessage.setTransmitido(false);
             e.printStackTrace();
         }
+        finally {
+            outboxMessageRepository.save(outboxMessage);
+        }
     }
+
+    
 }
 
 
